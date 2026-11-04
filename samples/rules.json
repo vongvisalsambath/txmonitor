@@ -1,0 +1,18 @@
+{
+  // amounts are in the base currency; other currencies are converted with these rates (made-up examples)
+  "baseCurrency": "USD",
+  "rates": { "KHR": 0.000245, "EUR": 1.08, "THB": 0.028 },
+  // the FATF "call for action" countries, as an example: check the current FATF list
+  "highRiskCountries": ["KP", "IR", "MM"],
+  "rules": [
+    { "id": "large-cash", "type": "large", "amount": 10000, "channels": ["cash"], "severity": "high" },
+    { "id": "structuring", "type": "structuring", "threshold": 10000, "near": 0.8, "count": 3, "days": 7, "severity": "high" },
+    { "id": "pass-through", "type": "pass-through", "minimum": 5000, "share": 0.8, "hours": 48, "severity": "high" },
+    { "id": "velocity", "type": "velocity", "count": 25, "hours": 24 },
+    { "id": "high-risk", "type": "high-risk-country", "minimum": 1000, "severity": "high" },
+    { "id": "round", "type": "round-amounts", "multiple": 1000, "count": 4, "days": 30, "severity": "low" },
+    { "id": "dormant", "type": "dormant", "days": 180, "minimum": 2000 },
+    { "id": "fan-in", "type": "fan-in", "counterparties": 10, "days": 7 },
+    { "id": "new-payee", "type": "new-counterparty", "minimum": 8000, "severity": "low" }
+  ]
+}

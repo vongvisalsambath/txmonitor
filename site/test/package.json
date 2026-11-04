@@ -1,0 +1,11 @@
+{
+  "name": "txmonitor-site-tests",
+  "private": true,
+  "description": "Browser tests for the TxMonitor site, under its production headers.",
+  "scripts": {
+    "e2e": "node e2e.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

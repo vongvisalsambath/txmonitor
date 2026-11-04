@@ -1,0 +1,117 @@
+@page "/"
+
+<PageTitle>TxMonitor · Transaction monitoring rules, explained</PageTitle>
+
+<section class="hero">
+  <h1>Transaction monitoring rules, <span class="hl">explained</span>.</h1>
+  <p class="lead">Run anti-money-laundering rules over a file of transactions: deposits kept just under a reporting threshold, money passing straight through an account, sudden bursts, dormant accounts waking up, many senders, risky countries. Every alert says what was found, with the numbers. It runs in your browser; nothing is uploaded.</p>
+</section>
+
+<div class="grid">
+  <section class="card inputs" aria-label="Transactions and rules">
+    <div class="field">
+      <div class="label-row">
+        <label for="file">Transactions</label>
+        <button class="chip" id="sample" @onclick="UseSample">Use the made-up sample</button>
+      </div>
+      <InputFile id="file" class="file" accept=".csv,text/csv" OnChange="Load" />
+      <p class="hint" id="loaded">@status</p>
+    </div>
+    <div class="field">
+      <div class="label-row">
+        <label for="rules">Rules (JSON)</label>
+        <button class="chip" @onclick="ResetRules">Reset to the example</button>
+      </div>
+      <textarea id="rules" rows="18" spellcheck="false" @bind="rulesJson" @bind:event="oninput" maxlength="@RuleSet.MaxBytes"></textarea>
+      <p class="hint">The example's thresholds are illustrations, not regulatory values. Each rule's settings are listed below.</p>
+    </div>
+    <button id="run" @onclick="Run" disabled="@running">@(running ? "Running…" : "Run the rules")</button>
+  </section>
+
+  <section class="card results" aria-live="polite" aria-label="Alerts">
+    @if (problems is { Count: > 0 })
+    {
+      <div class="problems" id="problems"><strong>@problemTitle</strong>
+        <ul>@foreach (var p in problems) { <li>@p</li> }</ul>
+      </div>
+    }
+    @if (alerts is null)
+    {
+      <p class="hint">Load transactions (or use the sample), then run the rules.</p>
+    }
+    else
+    {
+      <div class="summary" id="summary">
+        <strong>@Plural(alerts.Count, "alert")</strong>
+        <span>from @Plural(txCount, "transaction") on @Plural(accountCount, "account")</span>
+        <span class="chips">
+          <span class="sev high">@alerts.Count(a => a.Severity == Severity.High) high</span>
+          <span class="sev medium">@alerts.Count(a => a.Severity == Severity.Medium) medium</span>
+          <span class="sev low">@alerts.Count(a => a.Severity == Severity.Low) low</span>
+        </span>
+      </div>
+      @if (alerts.Count > 0)
+      {
+        <label class="filter">Show
+          <select @bind="minSeverity">
+            <option value="Low">every alert</option>
+            <option value="Medium">medium and high</option>
+            <option value="High">high only</option>
+          </select>
+        </label>
+        <ol class="alerts" id="alerts">
+          @foreach (var a in Shown)
+          {
+            <li class="alert @a.Severity.ToString().ToLowerInvariant()">
+              <div class="head">
+                <span class="sev @a.Severity.ToString().ToLowerInvariant()">@a.Severity.ToString().ToLowerInvariant()</span>
+                <strong class="acct">@a.Account</strong>
+                <span class="rule">@a.Rule</span>
+                <time datetime="@a.Time.ToString("o", CultureInfo.InvariantCulture)">@a.Time.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture)</time>
+              </div>
+              <p class="what">@a.Explanation</p>
+              <p class="ids">Transactions: @string.Join(", ", a.Transactions.Take(12))@(a.Transactions.Count > 12 ? $" and {a.Transactions.Count - 12} more" : "")</p>
+              @if (sample && Sample.Planted.TryGetValue(a.Account, out var planted))
+              {
+                <p class="planted">Planted in the sample: @planted</p>
+              }
+            </li>
+          }
+        </ol>
+        @if (Filtered.Count() > MaxShown)
+        {
+          <p class="hint">Showing the first @MaxShown of @Filtered.Count(). Use the command line for the full list.</p>
+        }
+      }
+    }
+  </section>
+</div>
+
+<section class="explain">
+  <h2>The rules</h2>
+  <p>Each rule has an <code>id</code>, a <code>type</code> from this list, a <code>severity</code> (low, medium or high) and its settings. Most also take <code>channels</code> (cash, card, transfer, wire, cheque, other) and <code>direction</code> (in or out). Amounts are in the rule set's <code>baseCurrency</code>; other currencies are converted with its <code>rates</code>. After an alert, a rule starts counting afresh for that account.</p>
+  <div class="table-wrap">
+    <table class="fields" id="types">
+      <thead><tr><th>Type</th><th>What it looks for</th><th>Settings</th></tr></thead>
+      <tbody>
+        @foreach (var (type, spec) in RuleSet.Types)
+        {
+          <tr>
+            <td class="num">@type</td>
+            <td>@spec.Description</td>
+            <td class="val">
+              @foreach (var (name, s) in spec.Settings)
+              {
+                <span class="meaning"><code>@name</code>@(s.Required ? "" : " (optional)"): @s.Meaning</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <h2>The file</h2>
+  <p>A CSV with a header row: <code>id, account, time, amount, currency, direction, channel</code>, and optionally <code>counterparty, counterparty_country, description</code>. Times need a time zone, such as <code>2026-03-01T09:30:00+07:00</code> or <code>…Z</code>; amounts are plain numbers such as <code>1250.00</code>. Up to @(MaxFileMb) MB here; the command line takes up to @(TransactionCsv.MaxBytes / 1024 / 1024) MB.</p>
+  <h2>What it is, and isn't</h2>
+  <p>A rules engine for learning, testing and prototyping transaction monitoring. Real programmes tune rules to their customers and their regulator's requirements, review alerts with trained staff, and keep records; this tool helps with the first step only. The sample's people, companies and numbers are invented.</p>
+</section>

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned to commits (the tag is in the comment), so a moved tag can't change what runs here.
+jobs:
+  build:
+    name: Library, command and website
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/test/package-lock.json
+      - run: dotnet test --configuration Release
+      - name: No known-vulnerable packages
+        run: |
+          dotnet list package --vulnerable --include-transitive | tee vulnerable.txt
+          ! grep -q "has the following vulnerable packages" vulnerable.txt
+      - name: The command finds the sample's planted patterns
+        run: |
+          cli="dotnet run --project src/TxMonitor.Cli -c Release -f net10.0 --"
+          $cli check-rules samples/rules.json
+          $cli run --rules samples/rules.json samples/transactions.csv 2> summary.txt
+          cat summary.txt
+          grep -q "11 alerts (6 high, 3 medium, 2 low)" summary.txt
+          $cli sample | cmp - samples/transactions.csv
+      - name: Website in Chromium, with the production headers
+        run: |
+          dotnet publish site/TxMonitor.Web -c Release -o out
+          cd site/test
+          npm ci
+          npm audit --audit-level=moderate
+          npx playwright install --with-deps chromium
+          node e2e.cjs ../../out/wwwroot
+      - run: |
+          dotnet pack src/TxMonitor -c Release -o nupkg
+          dotnet pack src/TxMonitor.Cli -c Release -o nupkg

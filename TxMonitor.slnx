@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TxMonitor/TxMonitor.csproj" />
+    <Project Path="src/TxMonitor.Cli/TxMonitor.Cli.csproj" />
+  </Folder>
+  <Folder Name="/site/">
+    <Project Path="site/TxMonitor.Web/TxMonitor.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TxMonitor.Tests/TxMonitor.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>TxMonitor</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Vong Visalsambath</Authors>
+    <Description>A transaction monitoring rules engine for anti-money-laundering alerts: structuring, rapid movement of funds, velocity, dormant accounts, fan-in and fan-out, high-risk countries and more, configured in JSON and explained in plain English.</Description>
+    <PackageTags>aml;transaction-monitoring;compliance;fraud;rules-engine;banking;fintech</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/vongvisalsambath/txmonitor</RepositoryUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TxMonitor.Tests" />
+  </ItemGroup>
+</Project>
