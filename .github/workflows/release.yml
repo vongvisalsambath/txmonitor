@@ -44,8 +44,8 @@ jobs:
       - run: dotnet test --configuration Release
       - name: Pack
         run: |
-          dotnet pack src/TxMonitor -c Release --no-build -o artifacts
-          dotnet pack src/TxMonitor.Cli -c Release --no-build -o artifacts
+          dotnet pack src/TxMonitor -c Release -o artifacts
+          dotnet pack src/TxMonitor.Cli -c Release -o artifacts
       - name: Log in to nuget.org (short-lived key)
         id: login
         uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
