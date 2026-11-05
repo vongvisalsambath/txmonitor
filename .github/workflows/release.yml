@@ -7,6 +7,11 @@ name: Release
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish; must match the version in the project file, e.g. 0.1.0"
+        required: true
 
 permissions:
   contents: read
@@ -28,11 +33,14 @@ jobs:
           dotnet-version: |
             8.0.x
             10.0.x
-      - name: The tag matches the package version
+      - name: The requested version matches the package version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           v="$(grep -oP '(?<=<Version>)[^<]+' src/TxMonitor/*.csproj)"
-          echo "tag $GITHUB_REF_NAME, package $v"
-          test "v$v" = "$GITHUB_REF_NAME"
+          want="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
+          echo "asked for $want, package $v"
+          test "$v" = "$want"
       - run: dotnet test --configuration Release
       - name: Pack
         run: |
