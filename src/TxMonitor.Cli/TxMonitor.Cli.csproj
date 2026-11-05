@@ -6,6 +6,8 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>txmonitor</ToolCommandName>
     <PackageId>TxMonitor.Cli</PackageId>
+    <PackageProjectUrl>https://txmonitor.vercel.app</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Version>0.1.0</Version>
     <Authors>Vong Visalsambath</Authors>
     <Description>Run transaction monitoring rules over a CSV of transactions and get explained alerts.</Description>
@@ -15,5 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="../TxMonitor/TxMonitor.csproj" />
     <InternalsVisibleTo Include="TxMonitor.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>

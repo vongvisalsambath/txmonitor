@@ -1,0 +1,47 @@
+name: Release
+
+# Publishes TxMonitor, TxMonitor.Cli to nuget.org when a version tag (v0.1.0, v0.2.0, ...) is pushed.
+# Uses NuGet Trusted Publishing: no API key is stored anywhere. nuget.org trusts this repository and this
+# workflow file (release.yml) through a policy on the owner's nuget.org account, and issues a key that lasts an hour.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+# Actions are pinned to commits (the tag is in the comment), so a moved tag can't change what runs here.
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write   # lets GitHub prove to nuget.org which repository and workflow is publishing
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: The tag matches the package version
+        run: |
+          v="$(grep -oP '(?<=<Version>)[^<]+' src/TxMonitor/*.csproj)"
+          echo "tag $GITHUB_REF_NAME, package $v"
+          test "v$v" = "$GITHUB_REF_NAME"
+      - run: dotnet test --configuration Release
+      - name: Pack
+        run: |
+          dotnet pack src/TxMonitor -c Release --no-build -o artifacts
+          dotnet pack src/TxMonitor.Cli -c Release --no-build -o artifacts
+      - name: Log in to nuget.org (short-lived key)
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: vongvisalsambath
+      - name: Publish
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
