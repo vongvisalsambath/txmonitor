@@ -28,6 +28,15 @@ HIGH   2026-09-17 15:14 +07:00  ACC-2001  [structuring]
        transactions: T004318, T004358, T004400
 ```
 
+## Install
+
+On NuGet: [TxMonitor](https://www.nuget.org/packages/TxMonitor) · [TxMonitor.Cli](https://www.nuget.org/packages/TxMonitor.Cli). For .NET 8 and .NET 10.
+
+```sh
+dotnet add package TxMonitor
+dotnet tool install --global TxMonitor.Cli   # the `txmonitor` command
+```
+
 ## What's in it
 
 | Part | What it does |
